@@ -1,0 +1,67 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+.venv/
+venv/
+env/
+*.whl
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Data files (large / sensitive)
+*.csv
+*.parquet
+*.feather
+*.pkl
+*.joblib
+*.h5
+*.hdf5
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.cert
+**/secrets/
+
+# Node / Frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# Logs
+*.log
+logs/
+
+# ML artifacts
+mlruns/
+mlflow/
+wandb/
+lightning_logs/
