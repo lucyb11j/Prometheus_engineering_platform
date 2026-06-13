@@ -1,0 +1,13 @@
+{
+    "sqltools.connections": [
+        {
+            "name": "Platform DB",
+            "driver": "PostgreSQL",
+            "server": "127.0.0.1",
+            "port": 5432,
+            "database": "analytics_db",
+            "username": "postgres",
+            "password": "tu_password_secreto"
+        }
+    ]
+}
