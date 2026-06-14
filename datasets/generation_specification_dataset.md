@@ -36,6 +36,7 @@ The generated datasets must support:
 | costs.csv       | 10,000  |
 | schedule.csv    | 5,000   |
 | maintenance.csv | 3,000   |
+| workforce.csv   | 3,000   |
 | risks.csv       | 1,500   |
 
 ---
@@ -259,4 +260,41 @@ Normal Distribution
 | Excavator  | 30%        |
 | Crane      | 20%        |
 | Dump Truck | 25%        |
-| Bulld      |            |
+| Bulldozer  | 15%        |
+| Concrete Mixer | 5%    |
+| Generator  | 5%         |
+
+---
+
+# 4.6 workforce.csv
+
+## Description
+
+Employee time-tracking records per project.
+
+## Record Count
+
+```text
+3,000
+```
+
+## Fields
+
+| Field              |
+| ------------------ |
+| employee_id        |
+| project_id         |
+| report_date        |
+| hours_worked       |
+| productivity_score |
+
+---
+
+## Distribution
+
+| Metric            | Value Range  |
+| ----------------- | ------------ |
+| hours_worked      | 4 - 12       |
+| productivity_score| 0.5 - 1.0    |
+
+Employees are randomly assigned to active projects within the project's date range.

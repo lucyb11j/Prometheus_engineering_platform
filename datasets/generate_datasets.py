@@ -228,7 +228,25 @@ for _ in range(1500):
         "maintenance_cost": cost
     })
 
-# ---- 9. Risks (1000) ----
+# ---- 9. Workforce (3000) ----
+workforce = []
+for _ in range(3000):
+    emp = random.choice(employees)
+    proj = random.choice(projects)
+    p_start = datetime.strptime(proj["start_date"], "%Y-%m-%d")
+    p_end = datetime.strptime(proj["end_date"], "%Y-%m-%d")
+    w_date = random_date(p_start, p_end)
+    hours = round(random.uniform(4, 12), 1)
+    productivity = round(random.uniform(0.5, 1.0), 2)
+    workforce.append({
+        "employee_id": emp["employee_id"],
+        "project_id": proj["project_id"],
+        "report_date": w_date.strftime("%Y-%m-%d"),
+        "hours_worked": hours,
+        "productivity_score": productivity,
+    })
+
+# ---- 10. Risks (1000) ----
 risks = []
 risk_descriptions_prefix = [
     "Budget overrun", "Schedule delay", "Quality non-compliance", "Safety incident",
@@ -278,6 +296,7 @@ if __name__ == "__main__":
     write_csv("costs.csv",      ["project_id", "vendor_id", "cost_date", "planned_cost", "actual_cost"], costs)
     write_csv("schedule.csv",   ["project_id", "report_date", "planned_progress", "actual_progress"], schedule)
     write_csv("maintenance.csv",["equipment_id", "maintenance_date", "maintenance_type", "downtime_hours", "maintenance_cost"], maintenance)
+    write_csv("workforce.csv",  ["employee_id", "project_id", "report_date", "hours_worked", "productivity_score"], workforce)
     write_csv("risks.csv",      ["risk_id", "project_id", "risk_description", "probability", "severity", "impact_cost", "impact_days"], risks)
 
     print("\nDone! All datasets generated in datasets/")

@@ -15,6 +15,7 @@ RAW_TABLES = {
     "schedule": ["project_id", "report_date", "planned_progress", "actual_progress"],
     "maintenance": ["equipment_id", "maintenance_date", "maintenance_type", "downtime_hours", "maintenance_cost"],
     "risks": ["risk_id", "project_id", "risk_description", "probability", "severity", "impact_cost", "impact_days"],
+    "workforce": ["employee_id", "project_id", "report_date", "hours_worked", "productivity_score"],
 }
 
 

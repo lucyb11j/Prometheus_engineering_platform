@@ -16,3 +16,4 @@ from etl.extract.extract_vendors import extract_vendors
 from etl.extract.extract_employees import extract_employees
 from etl.extract.extract_equipment import extract_equipment
 from etl.extract.extract_locations import extract_locations
+from etl.extract.extract_workforce import extract_workforce

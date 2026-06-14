@@ -10,17 +10,19 @@ from etl.extract import (
     extract_projects, extract_costs, extract_schedule,
     extract_maintenance, extract_risks, extract_vendors,
     extract_employees, extract_equipment, extract_locations,
+    extract_workforce,
 )
 from etl.transform import (
     transform_projects, transform_costs, transform_schedule,
     transform_maintenance, transform_risks, transform_vendors,
     transform_employees, transform_equipment, transform_locations,
+    transform_workforce,
 )
 from etl.load import load_raw, load_trusted
 from etl.load.load_curated import (
     load_dim_date, load_dim_location, load_dim_vendor, load_dim_employee,
     load_dim_equipment, load_dim_project, load_dim_risk,
-    load_fact_cost, load_fact_schedule, load_fact_maintenance, load_fact_risk,
+    load_fact_cost, load_fact_schedule, load_fact_maintenance, load_fact_workforce, load_fact_risk,
 )
 
 logging.basicConfig(
@@ -48,6 +50,7 @@ def extract_all() -> dict:
         "schedule": (extract_schedule, files["schedule"]),
         "maintenance": (extract_maintenance, files["maintenance"]),
         "risks": (extract_risks, files["risks"]),
+        "workforce": (extract_workforce, files["workforce"]),
     }
 
     data = {}
@@ -71,6 +74,7 @@ def transform_all(data: dict) -> dict:
         "schedule": (transform_schedule, data["schedule"]),
         "maintenance": (transform_maintenance, data["maintenance"]),
         "risks": (transform_risks, data["risks"]),
+        "workforce": (transform_workforce, data["workforce"]),
     }
 
     transformed = {}
@@ -84,10 +88,22 @@ def transform_all(data: dict) -> dict:
 def load_raw_all(data: dict) -> dict[str, int]:
     log.info("=== LOAD (raw) phase ===")
     counts = {}
-    for name in ["projects", "locations", "vendors", "employees", "equipment", "costs", "schedule", "maintenance", "risks"]:
+    for name in ["projects", "locations", "vendors", "employees", "equipment", "costs", "schedule", "maintenance", "risks", "workforce"]:
         log.info("  Loading %s into raw.%s...", name, name)
         counts[name] = load_raw(name, data[name])
         log.info("    -> %s rows inserted", counts[name])
+    return counts
+
+
+def load_trusted_all(data: dict) -> dict[str, int]:
+    log.info("=== LOAD (trusted) phase ===")
+    counts = {}
+    loaders = ["projects", "locations", "vendors", "employees", "equipment", "costs", "schedule", "maintenance", "risks", "workforce"]
+    for name in loaders:
+        log.info("  Loading %s into trusted...", name)
+        cnt = load_trusted(name, data[name])
+        log.info("    -> %s rows", cnt)
+        counts[name] = cnt
     return counts
 
 
@@ -136,6 +152,10 @@ def load_curated_all(data: dict) -> dict[str, int]:
         maint_count = load_fact_maintenance(conn, data["maintenance"], equipment_map)
         log.info("    -> %s rows", maint_count)
 
+        log.info("  Loading fact_workforce...")
+        workforce_count = load_fact_workforce(conn, data["workforce"], employee_map, project_map)
+        log.info("    -> %s rows", workforce_count)
+
         log.info("  Loading fact_risk...")
         risk_count = load_fact_risk(conn, data["risks"], project_map, risk_map)
         log.info("    -> %s rows", risk_count)
@@ -151,6 +171,7 @@ def load_curated_all(data: dict) -> dict[str, int]:
             "fact_cost": cost_count,
             "fact_schedule": sched_count,
             "fact_maintenance": maint_count,
+            "fact_workforce": workforce_count,
             "fact_risk": risk_count,
         }
     finally:
@@ -163,7 +184,7 @@ def run_pipeline(stages: list[str] | None = None) -> int:
     log.info("ETL Pipeline started")
     log.info("=" * 50)
 
-    stages = stages or ["extract", "transform", "load_raw", "load_curated"]
+    stages = stages or ["extract", "transform", "load_raw", "load_trusted", "load_curated"]
     data = {}
     transformed = {}
 
@@ -175,6 +196,8 @@ def run_pipeline(stages: list[str] | None = None) -> int:
         transformed = data
     if "load_raw" in stages:
         load_raw_all(transformed)
+    if "load_trusted" in stages:
+        load_trusted_all(transformed)
     if "load_curated" in stages:
         load_curated_all(transformed)
 
@@ -192,7 +215,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--stages",
         nargs="+",
-        choices=["extract", "transform", "load_raw", "load_curated"],
+        choices=["extract", "transform", "load_raw", "load_trusted", "load_curated"],
         default=None,
         help="Stages to run (default: all)",
     )

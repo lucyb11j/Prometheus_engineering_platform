@@ -1,15 +1,25 @@
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+
 
 @dataclass
 class DatabaseConfig:
-    host: str = field(default_factory=lambda: os.getenv("DB_HOST", "localhost"))
-    port: int = field(default_factory=lambda: int(os.getenv("DB_PORT", "5432")))
-    dbname: str = field(default_factory=lambda: os.getenv("DB_NAME", "engineering_platform"))
-    user: str = field(default_factory=lambda: os.getenv("DB_USER", "postgres"))
-    password: str = field(default_factory=lambda: os.getenv("DB_PASSWORD", "postgres"))
-    min_conn: int = field(default_factory=lambda: int(os.getenv("DB_MIN_CONN", "2")))
-    max_conn: int = field(default_factory=lambda: int(os.getenv("DB_MAX_CONN", "10")))
+    host: str = "localhost"
+    port: int = 5432
+    dbname: str = "analytics_db"
+    user: str = "admin"
+    password: str = "tu_password_secreto"
+    min_conn: int = 2
+    max_conn: int = 10
+
+    def __post_init__(self):
+        self.host = os.getenv("DB_HOST", self.host)
+        self.port = int(os.getenv("DB_PORT", str(self.port)))
+        self.dbname = os.getenv("DB_NAME", self.dbname)
+        self.user = os.getenv("DB_USER", self.user)
+        self.password = os.getenv("DB_PASSWORD", self.password)
+        self.min_conn = int(os.getenv("DB_MIN_CONN", str(self.min_conn)))
+        self.max_conn = int(os.getenv("DB_MAX_CONN", str(self.max_conn)))
 
     @property
     def dsn(self) -> str:
@@ -21,27 +31,11 @@ class DatabaseConfig:
 
 
 class Config:
-    DATASETS_DIR: str = os.getenv("DATASETS_DIR", "datasets")
-    DB: DatabaseConfig = DatabaseConfig()
-
-    EXTRACT_BATCH_SIZE: int = 1000
-    LOG_DIR: str = os.getenv("ETL_LOG_DIR", "etl/logs")
-
-    SOURCE_FILES: dict[str, str] = field(default_factory=lambda: {
-        "projects": "datasets/projects.csv",
-        "locations": "datasets/locations.csv",
-        "vendors": "datasets/vendors.csv",
-        "employees": "datasets/employees.csv",
-        "equipment": "datasets/equipment.csv",
-        "costs": "datasets/costs.csv",
-        "schedule": "datasets/schedule.csv",
-        "maintenance": "datasets/maintenance.csv",
-        "risks": "datasets/risks.csv",
-    })
-
-    def __post_init__(self):
-        if isinstance(self.SOURCE_FILES, dict):
-            return
+    def __init__(self):
+        self.DATASETS_DIR = os.getenv("DATASETS_DIR", "datasets")
+        self.DB = DatabaseConfig()
+        self.EXTRACT_BATCH_SIZE = 1000
+        self.LOG_DIR = os.getenv("ETL_LOG_DIR", "etl/logs")
         self.SOURCE_FILES = {
             "projects": f"{self.DATASETS_DIR}/projects.csv",
             "locations": f"{self.DATASETS_DIR}/locations.csv",
@@ -52,6 +46,7 @@ class Config:
             "schedule": f"{self.DATASETS_DIR}/schedule.csv",
             "maintenance": f"{self.DATASETS_DIR}/maintenance.csv",
             "risks": f"{self.DATASETS_DIR}/risks.csv",
+            "workforce": f"{self.DATASETS_DIR}/workforce.csv",
         }
 
 

@@ -7,3 +7,4 @@ from etl.transform.transform_vendors import transform_vendors
 from etl.transform.transform_employees import transform_employees
 from etl.transform.transform_equipment import transform_equipment
 from etl.transform.transform_locations import transform_locations
+from etl.transform.transform_workforce import transform_workforce
