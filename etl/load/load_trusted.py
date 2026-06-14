@@ -43,6 +43,66 @@ def _insert_rejected(conn, source: str, records: list[tuple[str, str]]):
         conn.commit()
 
 
+TRUSTED_DEFS: list[tuple[str, list[tuple[str, str]], str | None]] = [
+    ("trusted.project", [
+        ("project_id", "VARCHAR(50)"), ("project_name", "VARCHAR(200)"), ("project_type", "VARCHAR(100)"),
+        ("status", "VARCHAR(50)"), ("start_date", "DATE"), ("end_date", "DATE"), ("budget", "NUMERIC(18,2)"),
+        ("budget_valid", "BOOLEAN DEFAULT TRUE"), ("status_valid", "BOOLEAN DEFAULT TRUE"), ("date_valid", "BOOLEAN DEFAULT TRUE"),
+    ], "project_id"),
+    ("trusted.location", [
+        ("location_id", "VARCHAR(50)"), ("country", "VARCHAR(100)"), ("region", "VARCHAR(100)"),
+        ("city", "VARCHAR(100)"), ("site_name", "VARCHAR(200)"),
+    ], "location_id"),
+    ("trusted.vendor", [
+        ("vendor_id", "VARCHAR(50)"), ("vendor_name", "VARCHAR(200)"), ("category", "VARCHAR(100)"),
+        ("country", "VARCHAR(100)"), ("category_valid", "BOOLEAN DEFAULT TRUE"),
+    ], "vendor_id"),
+    ("trusted.employee", [
+        ("employee_id", "VARCHAR(50)"), ("full_name", "VARCHAR(200)"), ("department", "VARCHAR(100)"),
+        ("role", "VARCHAR(100)"), ("hire_date", "DATE"), ("salary", "NUMERIC(12,2) DEFAULT 0"),
+        ("hire_date_valid", "BOOLEAN DEFAULT TRUE"), ("salary_valid", "BOOLEAN DEFAULT TRUE"),
+    ], "employee_id"),
+    ("trusted.equipment", [
+        ("equipment_id", "VARCHAR(50)"), ("equipment_name", "VARCHAR(200)"), ("equipment_type", "VARCHAR(100)"),
+        ("status", "VARCHAR(50)"), ("purchase_date", "DATE"),
+        ("status_valid", "BOOLEAN DEFAULT TRUE"), ("purchase_date_valid", "BOOLEAN DEFAULT TRUE"),
+    ], "equipment_id"),
+    ("trusted.cost", [
+        ("project_id", "VARCHAR(50)"), ("vendor_id", "VARCHAR(50) DEFAULT ''"), ("cost_date", "DATE"),
+        ("planned_cost", "NUMERIC(18,2) DEFAULT 0"), ("actual_cost", "NUMERIC(18,2) DEFAULT 0"),
+        ("cost_variance", "NUMERIC(18,2) DEFAULT 0"), ("variance_pct", "NUMERIC(10,4)"),
+        ("planned_valid", "BOOLEAN DEFAULT TRUE"), ("actual_valid", "BOOLEAN DEFAULT TRUE"),
+    ], "project_id, vendor_id, cost_date"),
+    ("trusted.schedule", [
+        ("project_id", "VARCHAR(50)"), ("report_date", "DATE"),
+        ("planned_progress", "NUMERIC(8,2) DEFAULT 0"), ("actual_progress", "NUMERIC(8,2) DEFAULT 0"),
+        ("schedule_variance", "NUMERIC(8,2) DEFAULT 0"), ("spi", "NUMERIC(8,4)"),
+        ("is_behind_schedule", "BOOLEAN DEFAULT FALSE"), ("planned_valid", "BOOLEAN DEFAULT TRUE"),
+        ("actual_valid", "BOOLEAN DEFAULT TRUE"),
+    ], "project_id, report_date"),
+    ("trusted.maintenance", [
+        ("equipment_id", "VARCHAR(50)"), ("maintenance_date", "DATE"),
+        ("maintenance_type", "VARCHAR(100)"), ("maintenance_type_normalized", "VARCHAR(100)"),
+        ("downtime_hours", "NUMERIC(10,2) DEFAULT 0"), ("maintenance_cost", "NUMERIC(18,2) DEFAULT 0"),
+        ("type_valid", "BOOLEAN DEFAULT TRUE"), ("downtime_valid", "BOOLEAN DEFAULT TRUE"),
+        ("cost_valid", "BOOLEAN DEFAULT TRUE"),
+    ], None),
+    ("trusted.risk", [
+        ("risk_id", "VARCHAR(50)"), ("project_id", "VARCHAR(50)"), ("risk_description", "TEXT"),
+        ("probability", "NUMERIC(5,2) DEFAULT 0"), ("severity", "INTEGER DEFAULT 0"),
+        ("impact_cost", "NUMERIC(18,2) DEFAULT 0"), ("impact_days", "INTEGER DEFAULT 0"),
+        ("risk_score", "NUMERIC(10,2) DEFAULT 0"),
+        ("prob_valid", "BOOLEAN DEFAULT TRUE"), ("severity_valid", "BOOLEAN DEFAULT TRUE"),
+        ("impact_valid", "BOOLEAN DEFAULT TRUE"),
+    ], "risk_id"),
+    ("trusted.workforce", [
+        ("employee_id", "VARCHAR(50)"), ("project_id", "VARCHAR(50)"), ("report_date", "DATE"),
+        ("hours_worked", "NUMERIC(10,2) DEFAULT 0"), ("productivity_score", "NUMERIC(8,2) DEFAULT 0"),
+        ("hours_valid", "BOOLEAN DEFAULT TRUE"), ("productivity_valid", "BOOLEAN DEFAULT TRUE"),
+    ], "employee_id, project_id, report_date"),
+]
+
+
 def _ensure_trusted_tables(conn):
     with conn.cursor() as cur:
         cur.execute("""
@@ -54,129 +114,17 @@ def _ensure_trusted_tables(conn):
                 rejected_at TIMESTAMP NOT NULL DEFAULT NOW()
             )
         """)
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS trusted.project (
-                project_id VARCHAR(50) PRIMARY KEY,
-                project_name VARCHAR(200),
-                project_type VARCHAR(100),
-                status VARCHAR(50),
-                start_date DATE,
-                end_date DATE,
-                budget NUMERIC(18,2),
-                budget_valid BOOLEAN DEFAULT TRUE,
-                status_valid BOOLEAN DEFAULT TRUE,
-                date_valid BOOLEAN DEFAULT TRUE
-            )
-        """)
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS trusted.location (
-                location_id VARCHAR(50) PRIMARY KEY,
-                country VARCHAR(100),
-                region VARCHAR(100),
-                city VARCHAR(100),
-                site_name VARCHAR(200)
-            )
-        """)
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS trusted.vendor (
-                vendor_id VARCHAR(50) PRIMARY KEY,
-                vendor_name VARCHAR(200),
-                category VARCHAR(100),
-                country VARCHAR(100),
-                category_valid BOOLEAN DEFAULT TRUE
-            )
-        """)
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS trusted.employee (
-                employee_id VARCHAR(50) PRIMARY KEY,
-                full_name VARCHAR(200),
-                department VARCHAR(100),
-                role VARCHAR(100),
-                hire_date DATE,
-                salary NUMERIC(12,2) DEFAULT 0,
-                hire_date_valid BOOLEAN DEFAULT TRUE,
-                salary_valid BOOLEAN DEFAULT TRUE
-            )
-        """)
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS trusted.equipment (
-                equipment_id VARCHAR(50) PRIMARY KEY,
-                equipment_name VARCHAR(200),
-                equipment_type VARCHAR(100),
-                status VARCHAR(50),
-                purchase_date DATE,
-                status_valid BOOLEAN DEFAULT TRUE,
-                purchase_date_valid BOOLEAN DEFAULT TRUE
-            )
-        """)
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS trusted.cost (
-                project_id VARCHAR(50),
-                vendor_id VARCHAR(50) DEFAULT '',
-                cost_date DATE,
-                planned_cost NUMERIC(18,2) DEFAULT 0,
-                actual_cost NUMERIC(18,2) DEFAULT 0,
-                cost_variance NUMERIC(18,2) DEFAULT 0,
-                variance_pct NUMERIC(10,4),
-                planned_valid BOOLEAN DEFAULT TRUE,
-                actual_valid BOOLEAN DEFAULT TRUE,
-                PRIMARY KEY (project_id, vendor_id, cost_date)
-            )
-        """)
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS trusted.schedule (
-                project_id VARCHAR(50),
-                report_date DATE,
-                planned_progress NUMERIC(8,2) DEFAULT 0,
-                actual_progress NUMERIC(8,2) DEFAULT 0,
-                schedule_variance NUMERIC(8,2) DEFAULT 0,
-                spi NUMERIC(8,4),
-                is_behind_schedule BOOLEAN DEFAULT FALSE,
-                planned_valid BOOLEAN DEFAULT TRUE,
-                actual_valid BOOLEAN DEFAULT TRUE,
-                PRIMARY KEY (project_id, report_date)
-            )
-        """)
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS trusted.maintenance (
-                equipment_id VARCHAR(50),
-                maintenance_date DATE,
-                maintenance_type VARCHAR(100),
-                maintenance_type_normalized VARCHAR(100),
-                downtime_hours NUMERIC(10,2) DEFAULT 0,
-                maintenance_cost NUMERIC(18,2) DEFAULT 0,
-                type_valid BOOLEAN DEFAULT TRUE,
-                downtime_valid BOOLEAN DEFAULT TRUE,
-                cost_valid BOOLEAN DEFAULT TRUE
-            )
-        """)
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS trusted.risk (
-                risk_id VARCHAR(50) PRIMARY KEY,
-                project_id VARCHAR(50),
-                risk_description TEXT,
-                probability NUMERIC(5,2) DEFAULT 0,
-                severity INTEGER DEFAULT 0,
-                impact_cost NUMERIC(18,2) DEFAULT 0,
-                impact_days INTEGER DEFAULT 0,
-                risk_score NUMERIC(10,2) DEFAULT 0,
-                prob_valid BOOLEAN DEFAULT TRUE,
-                severity_valid BOOLEAN DEFAULT TRUE,
-                impact_valid BOOLEAN DEFAULT TRUE
-            )
-        """)
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS trusted.workforce (
-                employee_id VARCHAR(50),
-                project_id VARCHAR(50),
-                report_date DATE,
-                hours_worked NUMERIC(10,2) DEFAULT 0,
-                productivity_score NUMERIC(8,2) DEFAULT 0,
-                hours_valid BOOLEAN DEFAULT TRUE,
-                productivity_valid BOOLEAN DEFAULT TRUE,
-                PRIMARY KEY (employee_id, project_id, report_date)
-            )
-        """)
+        for fqname, columns, pk in TRUSTED_DEFS:
+            pk_clause = f"PRIMARY KEY ({pk})" if pk else ""
+            col_defs = ", ".join(f"{c} {t}" for c, t in columns)
+            if pk_clause:
+                col_defs += f", {pk_clause}"
+            cur.execute(f"CREATE TABLE IF NOT EXISTS {fqname} ({col_defs})")
+            for c, t in columns:
+                try:
+                    cur.execute(f"ALTER TABLE {fqname} ADD COLUMN IF NOT EXISTS {c} {t}")
+                except Exception:
+                    pass
         conn.commit()
 
 

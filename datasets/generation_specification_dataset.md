@@ -248,21 +248,40 @@ Normal Distribution
 ## Record Count
 
 ```text
-120
+48
 ```
+
+---
+
+## Fields
+
+| Field          |
+| -------------- |
+| equipment_id   |
+| equipment_name |
+| equipment_type |
+| manufacturer   |
+| purchase_date  |
+| status         |
 
 ---
 
 ## Equipment Types
 
-| Type       | Percentage |
-| ---------- | ---------- |
-| Excavator  | 30%        |
-| Crane      | 20%        |
-| Dump Truck | 25%        |
-| Bulldozer  | 15%        |
-| Concrete Mixer | 5%    |
-| Generator  | 5%         |
+| Type            | Percentage |
+| --------------- | ---------- |
+| Excavator       | 8.3%       |
+| Crane           | 8.3%       |
+| Bulldozer       | 8.3%       |
+| Loader          | 8.3%       |
+| Dump Truck      | 8.3%       |
+| Concrete Mixer  | 8.3%       |
+| Generator       | 8.3%       |
+| Welding Machine | 8.3%       |
+| Drill           | 8.3%       |
+| Compactor       | 8.3%       |
+| Scaffolding     | 8.3%       |
+| Pump            | 8.3%       |
 
 ---
 
@@ -298,3 +317,42 @@ Employee time-tracking records per project.
 | productivity_score| 0.5 - 1.0    |
 
 Employees are randomly assigned to active projects within the project's date range.
+
+---
+
+# 4.7 risks.csv
+
+## Description
+
+Project risk events and assessments.
+
+## Record Count
+
+```text
+1,000
+```
+
+## Fields
+
+| Field              |
+| ------------------ |
+| risk_id            |
+| project_id         |
+| risk_description   |
+| probability        |
+| severity           |
+| impact_cost        |
+| impact_days        |
+| risk_date          |
+
+---
+
+## Distribution
+
+| Metric            | Value Range  |
+| ----------------- | ------------ |
+| probability       | 0.1 - 0.95   |
+| severity          | 1 - 10       |
+| impact_cost (USD) | 5,000 - 200,000 |
+| impact_days       | 2 - 90       |
+| risk_date         | Within project date range |

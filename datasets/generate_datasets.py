@@ -160,10 +160,28 @@ for i in range(1, len(all_equip_names)+1):
         if all_equip_names[i-1] in names:
             eq_type = t
             break
+    purchase = random_date(datetime(2020, 1, 1), datetime(2024, 12, 31))
+    manufacturers_by_type = {
+        "Excavator": ["Caterpillar", "Komatsu", "Hitachi"],
+        "Crane": ["Liebherr", "Caterpillar", "Grove", "Tadano"],
+        "Bulldozer": ["Caterpillar", "Komatsu", "Shantui"],
+        "Loader": ["Caterpillar", "Komatsu", "Volvo"],
+        "Dump Truck": ["Volvo", "Caterpillar", "Komatsu", "Bell"],
+        "Concrete Mixer": ["Schwing", "Putzmeister", "CIFA", "Mercedes"],
+        "Generator": ["Caterpillar", "Cummins", "Kohler", "Generac"],
+        "Welding Machine": ["Miller", "Lincoln", "ESAB", "Fronius"],
+        "Drill": ["Atlas Copco", "Sandvik", "Boart Longyear", "Epiroc"],
+        "Compactor": ["Bomag", "Caterpillar", "Hamm", "Dynapac"],
+        "Scaffolding": ["Layher", "Peri", "Kwikstage", "Ringlock"],
+        "Pump": ["Grundfos", "Flygt", "Wacker", "Tsunami"],
+    }
+    manufacturer = random.choice(manufacturers_by_type.get(eq_type or "General", ["Unknown"]))
     equipment.append({
         "equipment_id": f"EQ{i:03d}",
         "equipment_name": all_equip_names[i-1],
         "equipment_type": eq_type or "General",
+        "manufacturer": manufacturer,
+        "purchase_date": purchase.strftime("%Y-%m-%d"),
         "status": random.choice(equipment_statuses)
     })
 
@@ -264,6 +282,9 @@ for i in range(1, 1001):
     sev = random.randint(1, 10)
     impact_cost = random.randint(5000, 200000)
     impact_days = random.randint(2, 90)
+    p_start = datetime.strptime(proj["start_date"], "%Y-%m-%d")
+    p_end = datetime.strptime(proj["end_date"], "%Y-%m-%d")
+    risk_date = random_date(p_start, p_end)
     risks.append({
         "risk_id": f"RISK{i:04d}",
         "project_id": proj["project_id"],
@@ -271,7 +292,8 @@ for i in range(1, 1001):
         "probability": prob,
         "severity": sev,
         "impact_cost": impact_cost,
-        "impact_days": impact_days
+        "impact_days": impact_days,
+        "risk_date": risk_date.strftime("%Y-%m-%d"),
     })
 
 # ---- Write CSVs ----
@@ -292,11 +314,11 @@ if __name__ == "__main__":
     write_csv("locations.csv",  ["location_id", "country", "region", "city", "site_name"], locations)
     write_csv("vendors.csv",    ["vendor_id", "vendor_name", "category", "country"], vendors)
     write_csv("employees.csv",  ["employee_id", "full_name", "department", "role", "hire_date"], employees)
-    write_csv("equipment.csv",  ["equipment_id", "equipment_name", "equipment_type", "status"], equipment)
+    write_csv("equipment.csv",  ["equipment_id", "equipment_name", "equipment_type", "manufacturer", "purchase_date", "status"], equipment)
     write_csv("costs.csv",      ["project_id", "vendor_id", "cost_date", "planned_cost", "actual_cost"], costs)
     write_csv("schedule.csv",   ["project_id", "report_date", "planned_progress", "actual_progress"], schedule)
     write_csv("maintenance.csv",["equipment_id", "maintenance_date", "maintenance_type", "downtime_hours", "maintenance_cost"], maintenance)
     write_csv("workforce.csv",  ["employee_id", "project_id", "report_date", "hours_worked", "productivity_score"], workforce)
-    write_csv("risks.csv",      ["risk_id", "project_id", "risk_description", "probability", "severity", "impact_cost", "impact_days"], risks)
+    write_csv("risks.csv",      ["risk_id", "project_id", "risk_description", "probability", "severity", "impact_cost", "impact_days", "risk_date"], risks)
 
     print("\nDone! All datasets generated in datasets/")
