@@ -15,6 +15,10 @@ from etl.transform.curated import (
 
 CURATED_COLUMNS: dict[str, list[tuple[str, str]]] = {
     "dim_vendor": [("effective_date", "DATE DEFAULT CURRENT_DATE"), ("expiration_date", "DATE DEFAULT '9999-12-31'"), ("is_current", "BOOLEAN DEFAULT TRUE")],
+    "dim_project": [("budget", "NUMERIC(18,2)")],
+    "dim_employee": [("salary", "NUMERIC(18,2)")],
+    "fact_cost": [("cost_variance", "NUMERIC(18,2)")],
+    "fact_schedule": [("schedule_variance", "NUMERIC(8,2)")],
 }
 
 
@@ -109,14 +113,14 @@ def _scd1_upsert(conn, table: str, id_col: str, rows: list[dict], extra_set: str
     col_list = ", ".join(cols)
     placeholders = ", ".join([f"%s" for _ in cols])
     with conn.cursor() as cur:
-        execute_values(
+        result = execute_values(
             cur,
             f"INSERT INTO curated.{table} ({col_list}) VALUES %s ON CONFLICT ({id_col}) DO UPDATE SET {set_clause} RETURNING {id_col}, {key_col}",
             [[r[c] for c in cols] for r in rows],
             fetch=True,
         )
         conn.commit()
-        return {row[0]: row[1] for row in cur.fetchall()}
+        return {row[0]: row[1] for row in result}
 
 
 def load_dim_location(conn, rows: list[dict]) -> dict[str, int]:

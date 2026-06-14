@@ -1,0 +1,34 @@
+version: 2
+
+sources:
+  - name: curated
+    database: analytics_db
+    schema: curated
+    description: "Curated layer — dimensions and facts loaded by the ETL pipeline"
+
+    tables:
+      - name: dim_date
+        description: "Date dimension with attributes (year, quarter, month, week, day)"
+      - name: dim_location
+        description: "Location dimension (SCD Type 1)"
+      - name: dim_vendor
+        description: "Vendor / supplier dimension (SCD Type 1)"
+      - name: dim_employee
+        description: "Employee dimension (SCD Type 2)"
+      - name: dim_equipment
+        description: "Equipment dimension (SCD Type 2)"
+      - name: dim_project
+        description: "Project dimension (SCD Type 2)"
+      - name: dim_risk
+        description: "Risk classification dimension (SCD Type 1)"
+
+      - name: fact_cost
+        description: "Cost fact — planned vs actual with variance"
+      - name: fact_schedule
+        description: "Schedule fact — progress tracking with SPI"
+      - name: fact_maintenance
+        description: "Maintenance fact — downtime & cost per equipment"
+      - name: fact_workforce
+        description: "Workforce fact — hours & productivity per employee/project"
+      - name: fact_risk
+        description: "Risk fact — probability, severity, impact & risk score"

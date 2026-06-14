@@ -1,0 +1,28 @@
+version: 2
+
+models:
+
+  - name: mart_executive_dashboard
+    description: Executive KPI dashboard — single-row snapshot
+    columns:
+      - name: snapshot_date
+        tests: [not_null]
+      - name: total_projects
+        tests: [not_null]
+      - name: active_projects
+      - name: completed_projects
+      - name: total_budget
+      - name: total_actual_cost
+        tests: [not_null]
+      - name: total_planned_cost
+        tests: [not_null]
+      - name: total_cost_variance
+      - name: avg_spi
+      - name: total_schedule_variance
+      - name: projects_with_risks
+      - name: avg_risk_score
+      - name: high_risk_count
+      - name: total_employees
+      - name: total_hours
+      - name: avg_productivity
+      - name: budget_health_pct
