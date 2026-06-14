@@ -20,9 +20,12 @@ from etl.transform import (
 )
 from etl.load import load_raw, load_trusted
 from etl.load.load_curated import (
-    load_dim_date, load_dim_location, load_dim_vendor, load_dim_employee,
-    load_dim_equipment, load_dim_project, load_dim_risk,
-    load_fact_cost, load_fact_schedule, load_fact_maintenance, load_fact_workforce, load_fact_risk,
+    _ensure_curated_tables,
+    load_dim_date, load_dim_location, load_dim_vendor,
+    load_dim_employee, load_dim_equipment, load_dim_project,
+    load_dim_risk,
+    load_fact_cost, load_fact_schedule, load_fact_maintenance,
+    load_fact_workforce, load_fact_risk,
 )
 
 logging.basicConfig(
@@ -113,6 +116,8 @@ def load_curated_all(data: dict) -> dict[str, int]:
     log.info("=== LOAD (curated) phase ===")
     conn = psycopg2.connect(config.DB.dsn)
     try:
+        _ensure_curated_tables(conn)
+
         log.info("  Loading dim_date...")
         load_dim_date(conn)
 

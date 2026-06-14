@@ -13,6 +13,22 @@ from etl.transform.curated import (
 )
 
 
+CURATED_COLUMNS: dict[str, list[tuple[str, str]]] = {
+    "dim_vendor": [("effective_date", "DATE DEFAULT CURRENT_DATE"), ("expiration_date", "DATE DEFAULT '9999-12-31'"), ("is_current", "BOOLEAN DEFAULT TRUE")],
+}
+
+
+def _ensure_curated_tables(conn):
+    with conn.cursor() as cur:
+        for table, cols in CURATED_COLUMNS.items():
+            for col, dtype in cols:
+                try:
+                    cur.execute(f"ALTER TABLE curated.{table} ADD COLUMN IF NOT EXISTS {col} {dtype}")
+                except Exception:
+                    pass
+        conn.commit()
+
+
 def load_dim_date(conn, start: str = "2020-01-01", end: str = "2035-12-31") -> int:
     rows = build_dim_date(start, end)
     with conn.cursor() as cur:
@@ -110,7 +126,7 @@ def load_dim_location(conn, rows: list[dict]) -> dict[str, int]:
 
 def load_dim_vendor(conn, rows: list[dict]) -> dict[str, int]:
     built = build_dim_vendor(rows)
-    return _scd2_upsert(conn, "dim_vendor", "vendor_id", ["vendor_name", "category", "country"], built)
+    return _scd1_upsert(conn, "dim_vendor", "vendor_id", built)
 
 
 def load_dim_employee(conn, rows: list[dict]) -> dict[str, int]:
